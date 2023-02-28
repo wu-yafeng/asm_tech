@@ -53,3 +53,67 @@ message注入其实就是windows消息钩子钩子注入、SetWindowsHook函数�
 
 与APC注入不同，APC是通过目标进程调用Sleep或者WaitForSingleObject函数时，引导作弊模块。而windows消息钩子，则是使用windows的消息机制来引导作弊模块。下面是伪代码
 
+``` cpp
+
+// hack.dll
+
+extern "C" _declspec(dllexport) LRESULT CALLBACK BootCheat(
+	int    nCode,
+	WPARAM wParam,
+	LPARAM lParam
+)
+{
+	if(IsGameProcess())
+    {
+        LoadLibrary(...);
+    }
+
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+// boot.exe
+
+int main()
+{
+	auto hModule = LoadLibrary(L"cheater.dll");
+
+	auto CallWndProc = GetProcAddress(hModule, "_BootCheat@12");
+
+	printf("GetProcAddress(...) %d \n", GetLastError());
+
+	auto handle = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hModule, 0);
+
+	printf("SetWindowsHook(...) %d\n", GetLastError());
+
+	system("pause");
+
+	UnhookWindowsHookEx(handle);
+}
+
+```
+
+## 远程线程注入
+
+这是一种很经典的注入方法，主要的特征是通过 CreateRemoteThread 函数实现boot启动注入。但需要注意的是，一般使用的boot代码是直接使用 LoadLibrary 函数作为线程的入口点。
+
+``` cpp
+
+//boot.exe
+
+auto pid = GetGameProcessId();
+
+auto hProc = OpenProcess(...);
+
+auto mem = VirtualAllocEx(hProc, ...);
+
+WriteProcessMemory(hProc, mem, "hack.dll");
+
+auto g_LoadLibrary = GetProcAddress(..,"LoadLibraryA");
+
+CreateRemoteThread(...,g_LoadLibrary, mem,...);
+
+```
+
+## 其他
+
+...
