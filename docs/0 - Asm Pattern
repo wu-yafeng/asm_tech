@@ -1,0 +1,42 @@
+# 汇编与高级语言的对应模式
+
+三元运算符的模式
+
+``` asm
+mov eax, [ebp+4]
+neg eax
+sbb eax, eax
+and eax, 0xFFFFFFF7
+add eax, 0x5
+
+```
+
+## 解释
+
+-----
+neg eax
+sbb eax,eax
+
+如果eax为true,则eax的值设置为-1.否则eax设置为0
+-----
+
+-----
+and eax, 0xFFFFFFF7
+
+如果eax为-1,则eax=0xFFFFFFF7,否则eax为0(0xFFFFFFF7 转换为10进制就是-9
+-----
+
+
+-----
+add eax,05
+
+eax = eax + 5;
+-----
+
+最终的cpp代码为
+
+``` cpp
+
+int eax = [ebp+4] ?  -4 : 5;
+
+```
